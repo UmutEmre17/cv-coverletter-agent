@@ -5,8 +5,13 @@ from typing import List, Optional
 
 from .cv_ingest import extract_text_from_pdf, chunk_text, Chunk
 from .search_demo import simple_keyword_search
+from .vector_store import build_faiss_index, save_index, load_index, semantic_search
+
+FAISS_INDEX = None
+FAISS_META = []
 
 app = FastAPI(title="CV Cover Letter Agent")
+FAISS_INDEX, FAISS_META = load_index()
 
 DATA_DIR = Path("data")
 CV_DIR = DATA_DIR / "cv"
