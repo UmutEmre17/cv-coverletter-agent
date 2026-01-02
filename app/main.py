@@ -1,10 +1,13 @@
+import os
+from .job_parse import extract_requirements
+from .schemas import JobAnalyzeReq, JobRequirements
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from pathlib import Path
 from typing import List, Optional
-
+from fastapi import HTTPException
+import traceback
 from .cv_ingest import extract_text_from_pdf, chunk_text, Chunk
-from .search_demo import simple_keyword_search
 from .vector_store import build_faiss_index, save_index, load_index, semantic_search
 
 FAISS_INDEX = None
@@ -29,7 +32,7 @@ def health():
 
 @app.post("/ingest-cv")
 async def ingest_cv(file: UploadFile = File(...)):
-    global CV_TEXT, CV_CHUNKS
+    global CV_TEXT, CV_CHUNKS, FAISS_INDEX, FAISS_META
 
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Please upload a PDF file.")
@@ -44,6 +47,9 @@ async def ingest_cv(file: UploadFile = File(...)):
 
     chunks = chunk_text(text, max_chars=1200, overlap=150)
 
+    FAISS_INDEX, FAISS_META = build_faiss_index(chunks)
+    save_index(FAISS_INDEX, FAISS_META)
+
     CV_TEXT = text
     CV_CHUNKS = chunks
 
@@ -51,6 +57,7 @@ async def ingest_cv(file: UploadFile = File(...)):
         "message": "CV ingested successfully",
         "chars": len(text),
         "chunks": len(chunks),
+        "indexed": True,
     }
 
 
@@ -61,10 +68,10 @@ class SearchReq(BaseModel):
 
 @app.post("/cv-search")
 def cv_search(req: SearchReq):
-    if not CV_CHUNKS:
-        raise HTTPException(status_code=400, detail="No CV ingested yet. Upload via /ingest-cv first.")
+    if FAISS_INDEX is None or not FAISS_META:
+        raise HTTPException(status_code=400, detail="No FAISS index found. Upload via /ingest-cv first.")
 
-    results = simple_keyword_search(CV_CHUNKS, req.query, top_k=req.top_k)
+    results = semantic_search(FAISS_INDEX, FAISS_META, req.query, top_k=req.top_k)
     return {"query": req.query, "results": results}
 
 @app.get("/debug/cv-state")
@@ -80,3 +87,17 @@ def debug_cv_state():
         "contains_php_in_full_text": ("php" in full),
         "first_400_chars": CV_TEXT[:400]
     }
+
+@app.post("/analyze-job", response_model=JobRequirements)
+def analyze_job(req: JobAnalyzeReq):
+    try:
+        model = req.model or os.getenv("GEMINI_TEXT_MODEL", "gemini-1.5-flash")
+        data = extract_requirements(req.job_text, model=model)
+        return JobRequirements(**data)
+    except Exception as e:
+        # terminale detay bas
+        print("----- /analyze-job ERROR -----")
+        traceback.print_exc()
+        print("----- END ERROR -----")
+        # swagger'a da detay dön
+        raise HTTPException(status_code=500, detail=str(e))

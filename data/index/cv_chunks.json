@@ -1,0 +1,18 @@
+[
+  {
+    "chunk_id": "chunk_0",
+    "text": "[PAGE 1]\nCurriculum Vitae - Academic \nPersonal Information \nName: Umut Emre MART \nPhone: +90 505 691 8907 \nEmail: uemremart@gmail.com \nLinkedIn: linkedin.com/in/umutemremart \nGitHub: github.com/UmutEmre17 \nEducation \nB.Sc. in Computer Engineering — Atılım University (https://www.atilim.edu.tr/en), Ankara, \nTurkey Sep 2021 – Aug 2025 GPA: 2.33/4.0 \n Relevant Coursework: Algorithms, Data Structures, Databases, Operating Systems, Software \nEngineering, Artificial Intelligence. \nCapstone Project: Spendify – Automated Expense Management and Approval System \n(Laravel, React Native, MySQL, OCR, Digital Signature, Role-based Workflows). \nExperience \nFull Stack Developer — Onlinepsikolog.com (Aug 2024 – Sep 2025) \n- Backend and frontend features for high-traffic platform. \n- JavaScript, jQuery, Laravel, API integrations, third-party SDKs (Zoom, Chatify). \n- Improved UI/UX, performance, and backend security. \n \nIntern — Insider (https://useinsider.com)(Jun 2024 – Aug 2024) \n- Developed JavaScript-based features. \n- Built web service application with Laravel. \n- Exposure to agile methodologies. \n \nIntern — Asisguard (https://www.asisguard.com.tr/en/) (Jul 2023 – Aug 2023) \n- Embedded software",
+    "meta": {
+      "start": 0,
+      "end": 1200
+    }
+  },
+  {
+    "chunk_id": "chunk_1",
+    "text": "with Laravel. \n- Exposure to agile methodologies. \n \nIntern — Asisguard (https://www.asisguard.com.tr/en/) (Jul 2023 – Aug 2023) \n- Embedded software for STM32 microcontrollers. \n- Experience in defense industry systems. \n \nSkills \nProgramming Languages: C, C++, Python, JavaScript, PHP/Laravel, Go \nFrameworks & Tools: React Native, Vue.js, Docker, HTML/CSS, Git, Jira\n\n[PAGE 2]\nDatabases: MySQL \nLanguages: Turkish (Native), English (8.0 / C1 – IELTS) \nCertifications \nThe Ultimate MySQL Bootcamp, Udemy (2023) \nMaster Laravel: Build 5 Real-World Projects, Udemy (2023) \nResponsive Web Design, FreeCodeCamp \nJavaScript Algorithms and Data Structures, FreeCodeCamp \nApplied Web Development, Udemy (2022) \nInternational English Language Testing System(IELTS) Grade – 8.0",
+    "meta": {
+      "start": 1050,
+      "end": 1821
+    }
+  }
+]
