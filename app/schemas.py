@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 
 class JobAnalyzeReq(BaseModel):
@@ -11,8 +11,8 @@ class JobAnalyzeReq(BaseModel):
 class JobRequirements(BaseModel):
     title: str = ""
     company: str = ""
-    seniority: str = ""
-    location_type: str = ""
+    seniority: Optional[str] = ""     
+    location_type: Optional[str] = ""  
     must_have: List[str] = []
     nice_to_have: List[str] = []
     responsibilities: List[str] = []

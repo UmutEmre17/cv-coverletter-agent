@@ -95,6 +95,7 @@ def semantic_search(index: faiss.Index, meta: List[Dict[str, Any]], query: str, 
             {
                 "score": float(score),
                 "chunk_id": item["chunk_id"],
+                "text": item["text"],
                 "preview": item["text"][:350] + ("..." if len(item["text"]) > 350 else ""),
                 "meta": item.get("meta", {}),
             }
