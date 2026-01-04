@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 type AgentResponse = {
   final?: {
@@ -13,18 +13,27 @@ type AgentResponse = {
     missing?: string[];
     notes?: string[];
   };
+};
+
+type ApiResponse = {
   requirements?: {
     title?: string;
     company?: string;
     location_type?: string;
     seniority?: string;
   };
+  result?: AgentResponse;
 };
 
 export default function App() {
   const [jobText, setJobText] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // ✅ FIX: result sadece "data.result" olacak
   const [result, setResult] = useState<AgentResponse | null>(null);
+
+  // ✅ opsiyonel: requirements UI'da göstermek için
+  const [reqMeta, setReqMeta] = useState<ApiResponse["requirements"] | null>(null);
 
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvStatus, setCvStatus] = useState<string>("");
@@ -38,6 +47,22 @@ export default function App() {
     if (fitScore >= 50) return "Medium fit";
     return "Low fit";
   }, [fitScore]);
+
+  const [backendStatus, setBackendStatus] = useState<
+    "checking" | "connected" | "disconnected"
+  >("checking");
+
+  useEffect(() => {
+    const checkHealth = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/health");
+        setBackendStatus(res.ok ? "connected" : "disconnected");
+      } catch {
+        setBackendStatus("disconnected");
+      }
+    };
+    checkHealth();
+  }, []);
 
   async function handleUploadCV() {
     if (!cvFile) return;
@@ -69,28 +94,33 @@ export default function App() {
   async function handleGenerate() {
     if (!jobText.trim()) return;
 
-    // CV upload edilmeden generate edilmesin
     if (!cvStatus.startsWith("✅")) {
-      alert("Önce CV upload edip indexle kanka 🙂");
+      alert("Önce CV upload edilmeli");
       return;
     }
 
     setLoading(true);
     setResult(null);
+    setReqMeta(null);
 
     try {
       const res = await fetch("http://127.0.0.1:8000/generate-from-job-text", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ job_text: jobText }),
+        headers: { "Content-Type": "text/plain" },
+        body: jobText,
       });
 
-      const data = await res.json();
+      // ✅ FIX: response shape {requirements, result}
+      const data = (await res.json()) as ApiResponse;
+
       if (!res.ok) {
-        alert(data?.detail || "Backend error");
+        alert((data as any)?.detail || "Backend error");
         return;
       }
-      setResult(data);
+
+      // ✅ FIX: doğru yere set
+      setReqMeta(data.requirements ?? null);
+      setResult(data.result ?? null);
     } catch (err) {
       console.error(err);
       alert("Backend not reachable");
@@ -111,10 +141,40 @@ export default function App() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">CV Cover Letter Agent</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              CV Cover Letter Agent
+            </h1>
             <p className="text-zinc-400 mt-1">
               Upload CV → paste job → generate tailored cover letter + fit insights.
             </p>
+
+            {/* ✅ backend status */}
+            <div className="flex items-center gap-2 mt-2">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  backendStatus === "connected"
+                    ? "bg-emerald-500"
+                    : backendStatus === "disconnected"
+                    ? "bg-rose-500"
+                    : "bg-zinc-500"
+                }`}
+              />
+              <span className="text-xs text-zinc-400">
+                {backendStatus === "connected"
+                  ? "Backend connected"
+                  : backendStatus === "disconnected"
+                  ? "Backend disconnected"
+                  : "Checking backend..."}
+              </span>
+            </div>
+
+            {/* ✅ job meta (opsiyonel ama güzel) */}
+            {reqMeta && (
+              <p className="text-sm text-zinc-400 mt-2">
+                {reqMeta.title || "Role"} • {reqMeta.company || "Company"} •{" "}
+                {reqMeta.seniority || "Level"} • {reqMeta.location_type || "Type"}
+              </p>
+            )}
           </div>
 
           {fitScore !== null && (
@@ -166,9 +226,7 @@ export default function App() {
               </div>
 
               {cvStatus && (
-                <p className="mt-3 text-sm text-zinc-300">
-                  {cvStatus}
-                </p>
+                <p className="mt-3 text-sm text-zinc-300">{cvStatus}</p>
               )}
             </div>
 
@@ -176,9 +234,7 @@ export default function App() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold">2) Job Description</h2>
-                <span className="text-xs text-zinc-400">
-                  {jobText.length} chars
-                </span>
+                <span className="text-xs text-zinc-400">{jobText.length} chars</span>
               </div>
 
               <textarea
@@ -197,16 +253,11 @@ export default function App() {
               >
                 {loading ? "Generating..." : "Generate Cover Letter"}
               </button>
-
-              <p className="mt-3 text-xs text-zinc-400">
-                Tip: Çok uzun metinlerde JSON error alırsan, düz metin gibi gönder; UI otomatik string olarak yolluyor.
-              </p>
             </div>
           </div>
 
           {/* RIGHT: output */}
           <div className="space-y-6">
-            {/* Cover letter */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <h2 className="text-lg font-semibold">Output</h2>
@@ -237,7 +288,6 @@ export default function App() {
               )}
             </div>
 
-            {/* Issues & Improvements */}
             {result?.final && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
@@ -266,7 +316,6 @@ export default function App() {
               </div>
             )}
 
-            {/* Matched / Missing */}
             {result?.fit && (
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
                 <h3 className="font-semibold mb-3">Fit breakdown</h3>
@@ -322,7 +371,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="mt-10 text-xs text-zinc-500">
           Local dev: React @ 5173 • FastAPI @ 8000
         </div>

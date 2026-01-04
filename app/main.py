@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
+from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel, Field
 
 from .cv_ingest import extract_text_from_pdf, chunk_text, Chunk
@@ -19,6 +21,13 @@ from .agent import run_agent
 # App + Persistent Index State
 # -----------------------------
 app = FastAPI(title="CV Cover Letter Agent")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 FAISS_INDEX = None
 FAISS_META = []

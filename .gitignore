@@ -1,5 +1,23 @@
+# Node
+node_modules/
+web/node_modules/
+dist/
+web/dist/
+dist-ssr/
+web/dist-ssr/
+
+# Python
 .venv/
-.env
-data/cv/
+venv/
 __pycache__/
 *.pyc
+
+# Runtime data / indexes
+data/
+*.faiss
+*.pkl
+*.jsonl
+
+# Env
+.env
+.env.*
